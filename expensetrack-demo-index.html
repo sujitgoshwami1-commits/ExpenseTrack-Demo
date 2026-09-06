@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="day">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ExpenseTrack — Business Expense &amp; Reimbursement Manager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1E2A22;
+    --paper:#F4F5F0;
+    --paper-2:#E8EAE1;
+    --line:#D9DCCF;
+    --green:#2C6E49;
+    --green-deep:#1F5236;
+    --gold:#B8860B;
+    --gold-deep:#8C6508;
+    --muted:#6E7A6F;
+    --success:#2C6E49;
+    --danger:#B23B3B;
+    --warn:#C79A2B;
+    --card:#FFFFFF;
+    --font-display:'Space Grotesk', sans-serif;
+    --font-body:'Inter', sans-serif;
+    --font-mono:'JetBrains Mono', monospace;
+    --shadow: 0 1px 2px rgba(30,42,34,0.07), 0 1px 0 rgba(30,42,34,0.04);
+  }
+  [data-theme="night"]{
+    --ink:#E9EEEA;
+    --paper:#111713;
+    --paper-2:#171F19;
+    --line:#28352C;
+    --green:#63A583;
+    --green-deep:#3E8A66;
+    --gold:#D9A62B;
+    --gold-deep:#B8860B;
+    --muted:#8B968C;
+    --card:#171F19;
+    --shadow: 0 1px 2px rgba(0,0,0,0.4);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper);color:var(--ink);font-family:var(--font-body);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,h4{font-family:var(--font-display);margin:0;letter-spacing:-0.01em;}
+  button{font-family:inherit;cursor:pointer;}
+  a{color:inherit;}
+
+  .shell{display:grid;grid-template-columns:230px 1fr;min-height:100vh;}
+  @media (max-width:860px){ .shell{grid-template-columns:1fr;} .sidebar{position:fixed;z-index:40;height:100vh;transform:translateX(-100%);transition:transform .2s ease;} .sidebar.open{transform:translateX(0);} }
+
+  .sidebar{background:var(--paper-2);border-right:1px solid var(--line);padding:18px 14px;display:flex;flex-direction:column;gap:22px;}
+  .brand{display:flex;align-items:center;gap:10px;padding:2px 6px 10px;border-bottom:1px solid var(--line);}
+  .brand-mark{width:30px;height:30px;border-radius:4px;background:var(--green);display:flex;align-items:center;justify-content:center;position:relative;flex-shrink:0;}
+  .brand-mark svg{width:16px;height:16px;stroke:#fff;}
+  .brand-mark::after{content:"";position:absolute;width:5px;height:5px;border-radius:50%;background:var(--gold);bottom:3px;right:3px;}
+  .brand-name{font-family:var(--font-display);font-weight:700;font-size:15px;}
+  .brand-tag{font-size:10.5px;color:var(--muted);font-family:var(--font-mono);letter-spacing:.02em;}
+
+  .nav{display:flex;flex-direction:column;gap:2px;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:5px;color:var(--ink);text-decoration:none;font-size:13.5px;font-weight:500;border:1px solid transparent;background:transparent;width:100%;text-align:left;}
+  .nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:.75;}
+  .nav-item:hover{background:var(--card);}
+  .nav-item.active{background:var(--card);border-color:var(--line);box-shadow:var(--shadow);}
+  .nav-item.active svg{opacity:1;color:var(--green);stroke:var(--green);}
+
+  .sidebar-foot{margin-top:auto;padding-top:12px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px;}
+  .toggle-row{display:flex;gap:6px;}
+  .toggle-btn{flex:1;padding:7px 6px;font-size:12px;border-radius:5px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-weight:500;}
+  .toggle-btn.active{background:var(--green);color:#fff;border-color:var(--green);}
+
+  .main{padding:22px 26px 60px;max-width:1180px;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px;flex-wrap:wrap;}
+  .menu-btn{display:none;background:var(--card);border:1px solid var(--line);border-radius:5px;padding:8px;}
+  @media (max-width:860px){.menu-btn{display:inline-flex;}}
+  .page-title{font-size:21px;font-weight:700;}
+  .page-sub{color:var(--muted);font-size:12.5px;margin-top:2px;}
+  .search-add{display:flex;gap:8px;align-items:center;}
+  .search-box{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:5px;padding:7px 10px;min-width:190px;}
+  .search-box input{border:none;background:transparent;outline:none;color:var(--ink);font-size:13px;width:100%;}
+  .search-box svg{width:14px;height:14px;opacity:.6;flex-shrink:0;}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 14px;border-radius:5px;border:1px solid transparent;font-size:13px;font-weight:600;white-space:nowrap;}
+  .btn-primary{background:var(--green);color:#fff;}
+  .btn-primary:hover{background:var(--green-deep);}
+  .btn-ghost{background:var(--card);border-color:var(--line);color:var(--ink);}
+  .btn-ghost:hover{background:var(--paper-2);}
+  .btn-danger{background:transparent;color:var(--danger);border-color:var(--danger);}
+  .btn-sm{padding:5px 9px;font-size:12px;}
+
+  .stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px;}
+  .stat-card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:14px 16px;box-shadow:var(--shadow);position:relative;}
+  .stat-num{font-family:var(--font-display);font-size:24px;font-weight:700;}
+  .stat-label{font-size:12px;color:var(--muted);margin-top:2px;}
+  .stat-dot{position:absolute;top:14px;right:14px;width:8px;height:8px;border-radius:50%;}
+
+  /* Receipt-style card: zigzag torn bottom edge */
+  .expense-grid{display:flex;flex-direction:column;gap:14px;}
+  .expense-card{
+    background:var(--card);border:1px solid var(--line);
+    padding:13px 15px 16px;box-shadow:var(--shadow);
+    display:grid;grid-template-columns:auto 1fr auto auto;gap:14px;align-items:center;
+    position:relative;
+    clip-path: polygon(0% 0%, 100% 0%, 100% 92%, 96% 100%, 92% 92%, 88% 100%, 84% 92%, 80% 100%, 76% 92%, 72% 100%, 68% 92%, 64% 100%, 60% 92%, 56% 100%, 52% 92%, 48% 100%, 44% 92%, 40% 100%, 36% 92%, 32% 100%, 28% 92%, 24% 100%, 20% 92%, 16% 100%, 12% 92%, 8% 100%, 4% 92%, 0% 100%);
+  }
+  .expense-thumb{
+    width:44px;height:44px;border-radius:4px;background:var(--paper-2);border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;cursor:pointer;
+  }
+  .expense-thumb img{width:100%;height:100%;object-fit:cover;}
+  .expense-thumb svg{width:18px;height:18px;opacity:.4;}
+  .expense-main .e-title{font-weight:600;font-size:14px;margin-bottom:3px;}
+  .expense-main .e-meta{font-size:12px;color:var(--muted);display:flex;gap:10px;flex-wrap:wrap;}
+  .expense-amount{text-align:right;font-family:var(--font-mono);font-weight:700;font-size:15px;white-space:nowrap;}
+  .tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:3px 8px;border-radius:3px;font-family:var(--font-mono);}
+  .tag-pending{background:rgba(199,154,43,0.16);color:#8a6a1c;}
+  .tag-approved{background:rgba(44,110,73,0.14);color:var(--green-deep);}
+  .tag-rejected{background:rgba(178,59,59,0.13);color:var(--danger);}
+  .tag-reimbursed{background:rgba(184,134,11,0.16);color:var(--gold-deep);}
+  .expense-actions{display:flex;gap:6px;}
+
+  .list-card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:13px 15px;box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:9px;flex-wrap:wrap;}
+  .list-main{display:flex;align-items:center;gap:12px;}
+  .avatar{width:36px;height:36px;border-radius:50%;background:var(--paper-2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:var(--green-deep);border:1px solid var(--line);flex-shrink:0;}
+  .list-title{font-weight:600;font-size:13.5px;}
+  .list-sub{font-size:12px;color:var(--muted);margin-top:1px;}
+  .list-actions{display:flex;gap:6px;}
+  .pill{font-size:11px;padding:3px 9px;border-radius:20px;background:var(--paper-2);border:1px solid var(--line);font-weight:600;}
+
+  .empty{text-align:center;padding:50px 20px;color:var(--muted);border:1px dashed var(--line);border-radius:8px;font-size:13px;}
+  .empty svg{width:34px;height:34px;opacity:.4;margin-bottom:10px;}
+
+  .section-head{display:flex;align-items:center;justify-content:space-between;margin:26px 0 12px;}
+  .section-head h3{font-size:14.5px;}
+  .filter-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+  .filter-row select, .filter-row input{padding:7px 10px;border-radius:5px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:12.5px;}
+
+  .overlay{position:fixed;inset:0;background:rgba(17,23,19,0.5);display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;z-index:100;}
+  .overlay.show{display:flex;}
+  .modal{background:var(--paper);border:1px solid var(--line);border-radius:8px;width:100%;max-width:560px;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,0.2);}
+  .modal h3{font-size:16px;margin-bottom:16px;}
+  .field{margin-bottom:12px;}
+  .field label{display:block;font-size:12px;font-weight:600;margin-bottom:5px;color:var(--muted);}
+  .field input, .field select, .field textarea{width:100%;padding:9px 10px;border-radius:5px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:13px;outline:none;}
+  .field textarea{resize:vertical;min-height:60px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
+  .receipt-preview{display:flex;align-items:center;gap:10px;margin-top:8px;}
+  .receipt-preview img{width:64px;height:64px;object-fit:cover;border-radius:5px;border:1px solid var(--line);}
+  .receipt-preview .hint{margin:0;}
+
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:6px;font-size:13px;opacity:0;pointer-events:none;transition:all .25s ease;z-index:200;}
+  [data-theme="night"] .toast{background:#E9EEEA;color:#111713;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  .bar-wrap{display:flex;flex-direction:column;gap:9px;}
+  .bar-row{display:grid;grid-template-columns:120px 1fr 90px;gap:10px;align-items:center;font-size:12px;}
+  .bar-track{background:var(--paper-2);border-radius:3px;height:9px;overflow:hidden;position:relative;}
+  .bar-fill{height:100%;background:var(--green);border-radius:3px;}
+  .bar-fill.over{background:var(--danger);}
+
+  .receipt-viewer-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center;z-index:300;padding:20px;}
+  .receipt-viewer-overlay.show{display:flex;}
+  .receipt-viewer-overlay img{max-width:90%;max-height:90%;border-radius:6px;}
+
+  ::placeholder{color:var(--muted);opacity:.7;}
+  .hint{font-size:11.5px;color:var(--muted);margin-top:5px;}
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">ExpenseTrack</div>
+        <div class="brand-tag">Expenses · Budgets · Reimbursement</div>
+      </div>
+    </div>
+    <nav class="nav" id="navList">
+      <button class="nav-item active" data-view="dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        <span>Dashboard</span>
+      </button>
+      <button class="nav-item" data-view="expenses">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <span>Expenses</span>
+      </button>
+      <button class="nav-item" data-view="employees">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Employees</span>
+      </button>
+      <button class="nav-item" data-view="budgets">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 3v4M8 3v4M2 11h20"/></svg>
+        <span>Budgets</span>
+      </button>
+      <button class="nav-item" data-view="reports">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-6 4 3 5-8"/></svg>
+        <span>Reports</span>
+      </button>
+    </nav>
+    <div class="sidebar-foot">
+      <div class="toggle-row">
+        <button class="toggle-btn active" id="btnDay">Day</button>
+        <button class="toggle-btn" id="btnNight">Night</button>
+      </div>
+      <button class="nav-item btn-danger" id="btnReset" style="border:1px solid var(--line);">
+        <span>Reset Demo Data</span>
+      </button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <button class="menu-btn" id="menuBtn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+      <div>
+        <div class="page-title" id="pageTitle">Dashboard</div>
+        <div class="page-sub" id="pageSub"></div>
+      </div>
+      <div class="search-add">
+        <div class="search-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="text" id="searchInput" placeholder="Search expenses, employees...">
+        </div>
+        <button class="btn btn-primary" id="btnQuickAdd">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+          <span id="quickAddLabel">New Expense</span>
+        </button>
+      </div>
+    </div>
+    <div id="viewRoot"></div>
+  </main>
+</div>
+
+<div class="overlay" id="overlay"><div class="modal" id="modalBody"></div></div>
+<div class="receipt-viewer-overlay" id="receiptViewer"><img id="receiptViewerImg" src=""></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ Strings ============ */
+const STR = {
+  dashboard:"Dashboard", expenses:"Expenses", employees:"Employees", budgets:"Budgets", reports:"Reports",
+  sub_dashboard:"An overview of spending across your business",
+  sub_expenses:"Log, review, and reimburse expense claims",
+  sub_employees:"Track who submits expenses and how much",
+  sub_budgets:"Set monthly budgets per category and track spend",
+  sub_reports:"Budget vs actual, category and employee breakdowns",
+  newExpense:"New Expense", newEmployee:"New Employee", newBudget:"New Category Budget",
+  pending:"Pending", approved:"Approved", rejected:"Rejected", reimbursed:"Reimbursed",
+  edit:"Edit", delete:"Delete", save:"Save", cancel:"Cancel",
+  date:"Date", employee:"Employee", category:"Category", amount:"Amount", description:"Description",
+  status:"Status", receipt:"Receipt Image", department:"Department", email:"Email",
+  monthlyBudget:"Monthly Budget", categoryName:"Category Name",
+  noExpenses:"No expenses logged yet.",
+  noEmployees:"No employees added yet.",
+  noBudgets:"No category budgets set yet.",
+  totalThisMonth:"Total This Month", pendingCount:"Pending Approval", approvedTotal:"Approved Total", reimbursedTotal:"Reimbursed Total",
+  spendByCategory:"Spend by Category", spendByEmployee:"Spend by Employee", recentExpenses:"Recent Expenses",
+  allStatus:"All Status", allCategory:"All Categories", allEmployees:"All Employees",
+  confirmDelete:"Are you sure you want to delete this?", saved:"Saved", deleted:"Deleted",
+  resetConfirm:"This will reset all demo data. Continue?", resetDone:"Demo data reset",
+  unassigned:"Unassigned", searchPh:"Search expenses, employees...",
+  noReceipt:"No receipt", viewReceipt:"View Receipt", removeReceipt:"Remove",
+  budgetVsActual:"Budget vs Actual (This Month)", statusBreakdown:"Status Breakdown",
+  totalBudget:"Total Monthly Budget", totalSpent:"Total Spent This Month",
+};
+function t(key){ return STR[key] || key; }
+
+/* ============ Data model ============ */
+const STORE_KEY = 'expensetrack_data_v1';
+function daysAgo(n){ const d=new Date(); d.setDate(d.getDate()-n); return d.toISOString().slice(0,10); }
+function seedData(){
+  return {
+    employees:[
+      {id:'e1', name:'Daniel Reyes', department:'Sales', email:'daniel@company.com'},
+      {id:'e2', name:'Olivia Bennett', department:'Marketing', email:'olivia@company.com'},
+      {id:'e3', name:'Company Card', department:'Operations', email:''},
+    ],
+    budgets:[
+      {id:'b1', name:'Travel', monthlyBudget:1200},
+      {id:'b2', name:'Meals & Entertainment', monthlyBudget:500},
+      {id:'b3', name:'Office Supplies', monthlyBudget:300},
+      {id:'b4', name:'Software & Subscriptions', monthlyBudget:400},
+    ],
+    expenses:[
+      {id:'x1', date: daysAgo(2), employeeId:'e1', category:'Travel', amount:245.50, description:'Client visit — flight + taxi', receipt:null, status:'approved'},
+      {id:'x2', date: daysAgo(4), employeeId:'e2', category:'Meals & Entertainment', amount:68.20, description:'Client lunch meeting', receipt:null, status:'pending'},
+      {id:'x3', date: daysAgo(1), employeeId:'e3', category:'Software & Subscriptions', amount:129.00, description:'Design tool annual renewal', receipt:null, status:'reimbursed'},
+      {id:'x4', date: daysAgo(6), employeeId:'e1', category:'Office Supplies', amount:42.75, description:'Printer paper and toner', receipt:null, status:'approved'},
+      {id:'x5', date: daysAgo(0), employeeId:'e2', category:'Travel', amount:310.00, description:'Conference hotel — 2 nights', receipt:null, status:'pending'},
+    ]
+  };
+}
+const SEED_DATE_KEY = 'expensetrack_seed_date';
+function todayStr(){ return new Date().toDateString(); }
+function loadData(){
+  const today = todayStr();
+  const lastSeedDate = localStorage.getItem(SEED_DATE_KEY);
+  let raw = localStorage.getItem(STORE_KEY);
+  if(!raw || lastSeedDate !== today){
+    const seed = seedData();
+    localStorage.setItem(STORE_KEY, JSON.stringify(seed));
+    localStorage.setItem(SEED_DATE_KEY, today);
+    return seed;
+  }
+  try{ return JSON.parse(raw); }
+  catch(e){ const seed = seedData(); localStorage.setItem(STORE_KEY, JSON.stringify(seed)); localStorage.setItem(SEED_DATE_KEY, today); return seed; }
+}
+function saveData(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(DATA)); }
+  catch(e){ showToast('Storage full — try removing a large receipt image'); }
+}
+let DATA = loadData();
+
+/* ============ State ============ */
+let currentView = 'dashboard';
+let searchTerm = '';
+let expenseFilterStatus = 'all';
+let expenseFilterCategory = 'all';
+let expenseFilterEmployee = 'all';
+let pendingReceiptData = null;
+
+/* ============ Helpers ============ */
+function uid(prefix){ return prefix + '-' + Math.floor(1000 + Math.random()*9000); }
+function findEmployee(id){ return DATA.employees.find(e=>e.id===id); }
+function findBudget(name){ return DATA.budgets.find(b=>b.name===name); }
+function showToast(msg){ const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'), 1800); }
+function fmtDate(iso){ if(!iso) return ''; const d = new Date(iso); return d.toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'}); }
+function fmtMoney(n){ return '$' + (Number(n)||0).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+function initials(name){ return (name||'?').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
+function isThisMonth(iso){ const d = new Date(iso); const now = new Date(); return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear(); }
+const STATUS_LABEL = {pending:t('pending'), approved:t('approved'), rejected:t('rejected'), reimbursed:t('reimbursed')};
+
+/* ============ Image compression for receipts ============ */
+function fileToCompressedDataURL(file, maxWidth, quality){
+  maxWidth = maxWidth || 900; quality = quality || 0.72;
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      const img = new Image();
+      img.onload = ()=>{
+        let w = img.width, h = img.height;
+        if(w > maxWidth){ h = Math.round(h * (maxWidth / w)); w = maxWidth; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ============ Rendering: Router ============ */
+const viewRoot = document.getElementById('viewRoot');
+const quickAddLabel = document.getElementById('quickAddLabel');
+const pageSub = document.getElementById('pageSub');
+
+function setView(view){
+  currentView = view;
+  document.querySelectorAll('.nav-item[data-view]').forEach(b=>b.classList.toggle('active', b.dataset.view===view));
+  document.getElementById('pageTitle').textContent = t(view);
+  pageSub.textContent = t('sub_'+view);
+  const addLabels = {dashboard:'newExpense', expenses:'newExpense', employees:'newEmployee', budgets:'newBudget', reports:'newExpense'};
+  quickAddLabel.textContent = t(addLabels[view] || 'newExpense');
+  document.getElementById('btnQuickAdd').style.display = view==='reports' ? 'none':'inline-flex';
+  render();
+  document.getElementById('sidebar').classList.remove('open');
+}
+function render(){
+  if(currentView==='dashboard') renderDashboard();
+  else if(currentView==='expenses') renderExpenses();
+  else if(currentView==='employees') renderEmployees();
+  else if(currentView==='budgets') renderBudgets();
+  else if(currentView==='reports') renderReports();
+}
+
+/* ---------- Dashboard ---------- */
+function renderDashboard(){
+  const thisMonthExpenses = DATA.expenses.filter(x=>isThisMonth(x.date));
+  const totalThisMonth = thisMonthExpenses.reduce((s,x)=>s+Number(x.amount||0),0);
+  const pendingCount = DATA.expenses.filter(x=>x.status==='pending').length;
+  const approvedTotal = thisMonthExpenses.filter(x=>x.status==='approved').reduce((s,x)=>s+Number(x.amount||0),0);
+  const reimbursedTotal = thisMonthExpenses.filter(x=>x.status==='reimbursed').reduce((s,x)=>s+Number(x.amount||0),0);
+
+  let html = `<div class="stat-row">
+    <div class="stat-card"><div class="stat-dot" style="background:var(--green)"></div><div class="stat-num" style="font-size:19px">${fmtMoney(totalThisMonth)}</div><div class="stat-label">${t('totalThisMonth')}</div></div>
+    <div class="stat-card"><div class="stat-dot" style="background:var(--warn)"></div><div class="stat-num">${pendingCount}</div><div class="stat-label">${t('pendingCount')}</div></div>
+    <div class="stat-card"><div class="stat-dot" style="background:var(--green)"></div><div class="stat-num" style="font-size:19px">${fmtMoney(approvedTotal)}</div><div class="stat-label">${t('approvedTotal')}</div></div>
+    <div class="stat-card"><div class="stat-dot" style="background:var(--gold)"></div><div class="stat-num" style="font-size:19px">${fmtMoney(reimbursedTotal)}</div><div class="stat-label">${t('reimbursedTotal')}</div></div>
+  </div>`;
+
+  const cats = DATA.budgets.map(b=>b.name);
+  const maxCatVal = Math.max(1, ...cats.map(c=> DATA.expenses.filter(x=>x.category===c && isThisMonth(x.date)).reduce((s,x)=>s+Number(x.amount||0),0)));
+  html += `<div class="section-head"><h3>${t('spendByCategory')}</h3></div><div class="bar-wrap">`;
+  cats.forEach(c=>{
+    const val = DATA.expenses.filter(x=>x.category===c && isThisMonth(x.date)).reduce((s,x)=>s+Number(x.amount||0),0);
+    const pct = Math.round((val/maxCatVal)*100);
+    html += `<div class="bar-row"><div>${escapeHtml(c)}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div><div>${fmtMoney(val)}</div></div>`;
+  });
+  html += `</div>`;
+
+  html += `<div class="section-head"><h3>${t('spendByEmployee')}</h3></div><div class="bar-wrap">`;
+  const maxEmpVal = Math.max(1, ...DATA.employees.map(e=> DATA.expenses.filter(x=>x.employeeId===e.id && isThisMonth(x.date)).reduce((s,x)=>s+Number(x.amount||0),0)));
+  DATA.employees.forEach(e=>{
+    const val = DATA.expenses.filter(x=>x.employeeId===e.id && isThisMonth(x.date)).reduce((s,x)=>s+Number(x.amount||0),0);
+    const pct = Math.round((val/maxEmpVal)*100);
+    html += `<div class="bar-row"><div>${escapeHtml(e.name)}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:var(--gold)"></div></div><div>${fmtMoney(val)}</div></div>`;
+  });
+  html += `</div>`;
+
+  html += `<div class="section-head"><h3>${t('recentExpenses')}</h3></div>`;
+  const recent = [...DATA.expenses].sort((a,b)=> new Date(b.date)-new Date(a.date)).slice(0,4);
+  html += expenseListHtml(recent, true);
+
+  viewRoot.innerHTML = html;
+  bindExpenseActions();
+}
+
+/* ---------- Expenses ---------- */
+function expenseListHtml(list, compact){
+  if(list.length===0) return `<div class="empty">${emptyIcon()}<div>${t('noExpenses')}</div></div>`;
+  return `<div class="expense-grid">` + list.map(x=>{
+    const emp = findEmployee(x.employeeId);
+    return `<div class="expense-card">
+      <div class="expense-thumb" ${x.receipt? `data-view-receipt="${x.id}"` : ''}>
+        ${x.receipt? `<img src="${x.receipt}">` : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>`}
+      </div>
+      <div class="expense-main">
+        <div class="e-title">${escapeHtml(x.description||x.category)}</div>
+        <div class="e-meta">
+          <span class="tag tag-${x.status}">${STATUS_LABEL[x.status]}</span>
+          <span>${escapeHtml(x.category)}</span>
+          <span>${emp? escapeHtml(emp.name) : t('unassigned')}</span>
+          <span>${fmtDate(x.date)}</span>
+        </div>
+      </div>
+      <div class="expense-amount">${fmtMoney(x.amount)}</div>
+      ${compact? '' : `<div class="expense-actions">
+        <button class="btn btn-ghost btn-sm" data-edit-expense="${x.id}">${t('edit')}</button>
+        <button class="btn btn-danger btn-sm" data-del-expense="${x.id}">${t('delete')}</button>
+      </div>`}
+    </div>`;
+  }).join('') + `</div>`;
+}
+function renderExpenses(){
+  let list = DATA.expenses.filter(x=>{
+    const emp = findEmployee(x.employeeId);
+    const hay = ((x.description||'')+' '+x.category+' '+(emp?emp.name:'')).toLowerCase();
+    if(searchTerm && !hay.includes(searchTerm.toLowerCase())) return false;
+    if(expenseFilterStatus!=='all' && x.status!==expenseFilterStatus) return false;
+    if(expenseFilterCategory!=='all' && x.category!==expenseFilterCategory) return false;
+    if(expenseFilterEmployee!=='all' && x.employeeId!==expenseFilterEmployee) return false;
+    return true;
+  }).sort((a,b)=> new Date(b.date)-new Date(a.date));
+
+  let html = `<div class="filter-row">
+    <select id="filterStatus"><option value="all">${t('allStatus')}</option>
+      <option value="pending">${t('pending')}</option><option value="approved">${t('approved')}</option>
+      <option value="rejected">${t('rejected')}</option><option value="reimbursed">${t('reimbursed')}</option>
+    </select>
+    <select id="filterCategory"><option value="all">${t('allCategory')}</option>${DATA.budgets.map(b=>`<option value="${escapeAttr(b.name)}">${escapeHtml(b.name)}</option>`).join('')}</select>
+    <select id="filterEmployee"><option value="all">${t('allEmployees')}</option>${DATA.employees.map(e=>`<option value="${e.id}">${escapeHtml(e.name)}</option>`).join('')}</select>
+  </div>`;
+  html += expenseListHtml(list, false);
+  viewRoot.innerHTML = html;
+  document.getElementById('filterStatus').value = expenseFilterStatus;
+  document.getElementById('filterCategory').value = expenseFilterCategory;
+  document.getElementById('filterEmployee').value = expenseFilterEmployee;
+  document.getElementById('filterStatus').onchange = e=>{ expenseFilterStatus = e.target.value; renderExpenses(); };
+  document.getElementById('filterCategory').onchange = e=>{ expenseFilterCategory = e.target.value; renderExpenses(); };
+  document.getElementById('filterEmployee').onchange = e=>{ expenseFilterEmployee = e.target.value; renderExpenses(); };
+  bindExpenseActions();
+}
+function bindExpenseActions(){
+  document.querySelectorAll('[data-edit-expense]').forEach(b=> b.onclick = ()=> openExpenseModal(b.dataset.editExpense));
+  document.querySelectorAll('[data-del-expense]').forEach(b=> b.onclick = ()=>{
+    if(confirm(t('confirmDelete'))){ DATA.expenses = DATA.expenses.filter(x=>x.id!==b.dataset.delExpense); saveData(); showToast(t('deleted')); render(); }
+  });
+  document.querySelectorAll('[data-view-receipt]').forEach(el=> el.onclick = ()=>{
+    const x = DATA.expenses.find(e=>e.id===el.dataset.viewReceipt);
+    if(x && x.receipt){ document.getElementById('receiptViewerImg').src = x.receipt; document.getElementById('receiptViewer').classList.add('show'); }
+  });
+}
+document.getElementById('receiptViewer').addEventListener('click', ()=> document.getElementById('receiptViewer').classList.remove('show'));
+
+function openExpenseModal(id){
+  const existing = id ? DATA.expenses.find(x=>x.id===id) : null;
+  pendingReceiptData = existing ? existing.receipt : null;
+  const modal = document.getElementById('modalBody');
+  modal.innerHTML = `
+    <h3>${existing? t('edit'): t('newExpense')}</h3>
+    <div class="field-row">
+      <div class="field"><label>${t('date')}</label><input type="date" id="f_date" value="${existing?existing.date:new Date().toISOString().slice(0,10)}"></div>
+      <div class="field"><label>${t('amount')}</label><input type="number" step="0.01" id="f_amount" value="${existing?existing.amount:''}"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>${t('employee')}</label><select id="f_employee">${DATA.employees.map(e=>`<option value="${e.id}" ${existing&&existing.employeeId===e.id?'selected':''}>${escapeHtml(e.name)}</option>`).join('')}</select></div>
+      <div class="field"><label>${t('category')}</label><select id="f_category">${DATA.budgets.map(b=>`<option value="${escapeAttr(b.name)}" ${existing&&existing.category===b.name?'selected':''}>${escapeHtml(b.name)}</option>`).join('')}</select></div>
+    </div>
+    <div class="field"><label>${t('description')}</label><textarea id="f_desc">${existing?escapeHtml(existing.description||''):''}</textarea></div>
+    <div class="field"><label>${t('status')}</label><select id="f_status">
+      ${['pending','approved','rejected','reimbursed'].map(s=>`<option value="${s}" ${existing&&existing.status===s?'selected':''}>${STATUS_LABEL[s]}</option>`).join('')}
+    </select></div>
+    <div class="field">
+      <label>${t('receipt')}</label>
+      <input type="file" id="f_receipt" accept="image/*">
+      <div class="receipt-preview" id="receiptPreview">
+        ${existing&&existing.receipt? `<img src="${existing.receipt}"><button type="button" class="btn btn-ghost btn-sm" id="btnRemoveReceipt">${t('removeReceipt')}</button>` : `<span class="hint">${t('noReceipt')}</span>`}
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="modalCancel">${t('cancel')}</button>
+      <button class="btn btn-primary" id="modalSave">${t('save')}</button>
+    </div>
+  `;
+  openOverlay();
+  document.getElementById('f_receipt').addEventListener('change', async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    try{
+      const dataUrl = await fileToCompressedDataURL(file);
+      pendingReceiptData = dataUrl;
+      document.getElementById('receiptPreview').innerHTML = `<img src="${dataUrl}"><button type="button" class="btn btn-ghost btn-sm" id="btnRemoveReceipt">${t('removeReceipt')}</button>`;
+      document.getElementById('btnRemoveReceipt').onclick = ()=>{ pendingReceiptData = null; document.getElementById('receiptPreview').innerHTML = `<span class="hint">${t('noReceipt')}</span>`; };
+    }catch(err){ showToast('Could not read image'); }
+  });
+  if(existing && existing.receipt){
+    document.getElementById('btnRemoveReceipt').onclick = ()=>{ pendingReceiptData = null; document.getElementById('receiptPreview').innerHTML = `<span class="hint">${t('noReceipt')}</span>`; };
+  }
+  document.getElementById('modalCancel').onclick = closeOverlay;
+  document.getElementById('modalSave').onclick = ()=>{
+    const amount = Number(document.getElementById('f_amount').value)||0;
+    const obj = {
+      id: existing? existing.id : uid('x'),
+      date: document.getElementById('f_date').value,
+      employeeId: document.getElementById('f_employee').value,
+      category: document.getElementById('f_category').value,
+      amount,
+      description: document.getElementById('f_desc').value.trim(),
+      status: document.getElementById('f_status').value,
+      receipt: pendingReceiptData,
+    };
+    if(existing){ DATA.expenses = DATA.expenses.map(x=>x.id===existing.id?obj:x); }
+    else { DATA.expenses.unshift(obj); }
+    saveData(); showToast(t('saved')); closeOverlay(); render();
+  };
+}
+
+/* ---------- Employees ---------- */
+function renderEmployees(){
+  let list = DATA.employees.filter(e=> !searchTerm || (e.name+e.department+e.email).toLowerCase().includes(searchTerm.toLowerCase()));
+  if(list.length===0){ viewRoot.innerHTML = `<div class="empty">${emptyIcon()}<div>${t('noEmployees')}</div></div>`; return; }
+  let html = list.map(e=>{
+    const total = DATA.expenses.filter(x=>x.employeeId===e.id && isThisMonth(x.date)).reduce((s,x)=>s+Number(x.amount||0),0);
+    return `<div class="list-card">
+      <div class="list-main">
+        <div class="avatar">${initials(e.name)}</div>
+        <div>
+          <div class="list-title">${escapeHtml(e.name)}</div>
+          <div class="list-sub">${escapeHtml(e.department||'')} · ${escapeHtml(e.email||'')}</div>
+        </div>
+      </div>
+      <div class="list-actions">
+        <span class="pill">${fmtMoney(total)} this month</span>
+        <button class="btn btn-ghost btn-sm" data-edit-employee="${e.id}">${t('edit')}</button>
+        <button class="btn btn-danger btn-sm" data-del-employee="${e.id}">${t('delete')}</button>
+      </div>
+    </div>`;
+  }).join('');
+  viewRoot.innerHTML = html;
+  document.querySelectorAll('[data-edit-employee]').forEach(b=> b.onclick=()=>openEmployeeModal(b.dataset.editEmployee));
+  document.querySelectorAll('[data-del-employee]').forEach(b=> b.onclick=()=>{
+    if(confirm(t('confirmDelete'))){ DATA.employees = DATA.employees.filter(x=>x.id!==b.dataset.delEmployee); saveData(); showToast(t('deleted')); render(); }
+  });
+}
+function openEmployeeModal(id){
+  const existing = id ? findEmployee(id) : null;
+  const modal = document.getElementById('modalBody');
+  modal.innerHTML = `
+    <h3>${existing? t('edit'): t('newEmployee')}</h3>
+    <div class="field"><label>${t('employee')}</label><input id="f_name" value="${existing?escapeAttr(existing.name):''}"></div>
+    <div class="field"><label>${t('department')}</label><input id="f_dept" value="${existing?escapeAttr(existing.department||''):''}"></div>
+    <div class="field"><label>${t('email')}</label><input id="f_email" value="${existing?escapeAttr(existing.email||''):''}"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="modalCancel">${t('cancel')}</button>
+      <button class="btn btn-primary" id="modalSave">${t('save')}</button>
+    </div>`;
+  openOverlay();
+  document.getElementById('modalCancel').onclick = closeOverlay;
+  document.getElementById('modalSave').onclick = ()=>{
+    const name = document.getElementById('f_name').value.trim();
+    if(!name) return;
+    const obj = { id: existing? existing.id: uid('e'), name, department: document.getElementById('f_dept').value.trim(), email: document.getElementById('f_email').value.trim() };
+    if(existing){ DATA.employees = DATA.employees.map(x=>x.id===existing.id?obj:x); } else { DATA.employees.push(obj); }
+    saveData(); showToast(t('saved')); closeOverlay(); render();
+  };
+}
+
+/* ---------- Budgets ---------- */
+function renderBudgets(){
+  let list = DATA.budgets.filter(b=> !searchTerm || b.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  if(list.length===0){ viewRoot.innerHTML = `<div class="empty">${emptyIcon()}<div>${t('noBudgets')}</div></div>`; return; }
+  let html = list.map(b=>{
+    const spent = DATA.expenses.filter(x=>x.category===b.name && isThisMonth(x.date)).reduce((s,x)=>s+Number(x.amount||0),0);
+    const pct = b.monthlyBudget>0 ? Math.min(100, Math.round((spent/b.monthlyBudget)*100)) : 0;
+    const over = spent > b.monthlyBudget;
+    return `<div class="list-card" style="flex-direction:column;align-items:stretch;">
+      <div style="display:flex;justify-content:space-between;align-items:center;width:100%;margin-bottom:8px;">
+        <div class="list-title">${escapeHtml(b.name)}</div>
+        <div class="list-actions">
+          <span class="pill">${fmtMoney(spent)} / ${fmtMoney(b.monthlyBudget)}</span>
+          <button class="btn btn-ghost btn-sm" data-edit-budget="${b.id}">${t('edit')}</button>
+          <button class="btn btn-danger btn-sm" data-del-budget="${b.id}">${t('delete')}</button>
+        </div>
+      </div>
+      <div class="bar-track"><div class="bar-fill ${over?'over':''}" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+  viewRoot.innerHTML = html;
+  document.querySelectorAll('[data-edit-budget]').forEach(b=> b.onclick=()=>openBudgetModal(b.dataset.editBudget));
+  document.querySelectorAll('[data-del-budget]').forEach(b=> b.onclick=()=>{
+    if(confirm(t('confirmDelete'))){ DATA.budgets = DATA.budgets.filter(x=>x.id!==b.dataset.delBudget); saveData(); showToast(t('deleted')); render(); }
+  });
+}
+function openBudgetModal(id){
+  const existing = id ? DATA.budgets.find(b=>b.id===id) : null;
+  const modal = document.getElementById('modalBody');
+  modal.innerHTML = `
+    <h3>${existing? t('edit'): t('newBudget')}</h3>
+    <div class="field"><label>${t('categoryName')}</label><input id="f_name" value="${existing?escapeAttr(existing.name):''}"></div>
+    <div class="field"><label>${t('monthlyBudget')}</label><input type="number" step="0.01" id="f_budget" value="${existing?existing.monthlyBudget:''}"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="modalCancel">${t('cancel')}</button>
+      <button class="btn btn-primary" id="modalSave">${t('save')}</button>
+    </div>`;
+  openOverlay();
+  document.getElementById('modalCancel').onclick = closeOverlay;
+  document.getElementById('modalSave').onclick = ()=>{
+    const name = document.getElementById('f_name').value.trim();
+    if(!name) return;
+    const obj = { id: existing? existing.id: uid('b'), name, monthlyBudget: Number(document.getElementById('f_budget').value)||0 };
+    if(existing){ DATA.budgets = DATA.budgets.map(x=>x.id===existing.id?obj:x); } else { DATA.budgets.push(obj); }
+    saveData(); showToast(t('saved')); closeOverlay(); render();
+  };
+}
+
+/* ---------- Reports ---------- */
+function renderReports(){
+  const thisMonthExpenses = DATA.expenses.filter(x=>isThisMonth(x.date));
+  const totalBudget = DATA.budgets.reduce((s,b)=>s+Number(b.monthlyBudget||0),0);
+  const totalSpent = thisMonthExpenses.reduce((s,x)=>s+Number(x.amount||0),0);
+
+  let html = `<div class="stat-row">
+    <div class="stat-card"><div class="stat-num" style="font-size:18px">${fmtMoney(totalBudget)}</div><div class="stat-label">${t('totalBudget')}</div></div>
+    <div class="stat-card"><div class="stat-num" style="font-size:18px">${fmtMoney(totalSpent)}</div><div class="stat-label">${t('totalSpent')}</div></div>
+    <div class="stat-card"><div class="stat-num">${DATA.employees.length}</div><div class="stat-label">Employees</div></div>
+    <div class="stat-card"><div class="stat-num">${DATA.expenses.length}</div><div class="stat-label">Total Expenses Logged</div></div>
+  </div>`;
+
+  html += `<div class="section-head"><h3>${t('budgetVsActual')}</h3></div><div class="bar-wrap">`;
+  DATA.budgets.forEach(b=>{
+    const spent = thisMonthExpenses.filter(x=>x.category===b.name).reduce((s,x)=>s+Number(x.amount||0),0);
+    const pct = b.monthlyBudget>0 ? Math.min(100, Math.round((spent/b.monthlyBudget)*100)) : 0;
+    const over = spent > b.monthlyBudget;
+    html += `<div class="bar-row"><div>${escapeHtml(b.name)}</div><div class="bar-track"><div class="bar-fill ${over?'over':''}" style="width:${pct}%"></div></div><div>${fmtMoney(spent)}</div></div>`;
+  });
+  html += `</div>`;
+
+  html += `<div class="section-head"><h3>${t('statusBreakdown')}</h3></div><div class="bar-wrap">`;
+  const statuses = ['pending','approved','rejected','reimbursed'];
+  const maxStatusVal = Math.max(1, ...statuses.map(s=>DATA.expenses.filter(x=>x.status===s).reduce((sum,x)=>sum+Number(x.amount||0),0)));
+  statuses.forEach(s=>{
+    const val = DATA.expenses.filter(x=>x.status===s).reduce((sum,x)=>sum+Number(x.amount||0),0);
+    const pct = Math.round((val/maxStatusVal)*100);
+    html += `<div class="bar-row"><div>${STATUS_LABEL[s]}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:var(--gold)"></div></div><div>${fmtMoney(val)}</div></div>`;
+  });
+  html += `</div>`;
+  viewRoot.innerHTML = html;
+}
+
+/* ============ Misc UI helpers ============ */
+function emptyIcon(){ return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`; }
+function escapeHtml(str){ if(str==null) return ''; return String(str).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+function escapeAttr(str){ return escapeHtml(str); }
+function openOverlay(){ document.getElementById('overlay').classList.add('show'); }
+function closeOverlay(){ document.getElementById('overlay').classList.remove('show'); }
+document.getElementById('overlay').addEventListener('click', (e)=>{ if(e.target.id==='overlay') closeOverlay(); });
+
+/* ============ Nav & top bar bindings ============ */
+document.querySelectorAll('.nav-item[data-view]').forEach(b=> b.onclick = ()=> setView(b.dataset.view));
+document.getElementById('menuBtn').onclick = ()=> document.getElementById('sidebar').classList.toggle('open');
+document.getElementById('searchInput').addEventListener('input', (e)=>{ searchTerm = e.target.value; render(); });
+document.getElementById('btnQuickAdd').onclick = ()=>{
+  if(currentView==='expenses'||currentView==='dashboard') openExpenseModal(null);
+  else if(currentView==='employees') openEmployeeModal(null);
+  else if(currentView==='budgets') openBudgetModal(null);
+};
+document.getElementById('btnReset').onclick = ()=>{
+  if(confirm(t('resetConfirm'))){ DATA = seedData(); saveData(); showToast(t('resetDone')); render(); }
+};
+
+/* ---------- Theme toggle ---------- */
+let theme = localStorage.getItem('et_theme') || 'day';
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme', theme==='day'?'day':'night');
+  document.getElementById('btnDay').classList.toggle('active', theme==='day');
+  document.getElementById('btnNight').classList.toggle('active', theme==='night');
+}
+document.getElementById('btnDay').onclick = ()=>{ theme='day'; localStorage.setItem('et_theme','day'); applyTheme(); };
+document.getElementById('btnNight').onclick = ()=>{ theme='night'; localStorage.setItem('et_theme','night'); applyTheme(); };
+
+/* ---------- Init ---------- */
+applyTheme();
+setView('dashboard');
+</script>
+</body>
+</html>
